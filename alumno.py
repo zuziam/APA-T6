@@ -1,12 +1,23 @@
+"""
+Student grades processing.
+
+Zuzanna Masklak
+
+This module defines the Alumno class and the leeAlumnos() function, which
+reads a text file containing student data using regular expressions.
+"""
+
+import re
+
+
 class Alumno:
     """
-    Clase usada para el tratamiento de las notas de los alumnos. Cada uno
-    incluye los atributos siguientes:
-
-    numIden:   Número de identificación. Es un número entero que, en caso
-               de no indicarse, toma el valor por defecto 'numIden=-1'.
-    nombre:    Nombre completo del alumno.
-    notas:     Lista de números reales con las distintas notas de cada alumno.
+    Class used to process student grades. Each student has the following
+    attributes:
+    numIden:   Identification number. It is an integer. If it is not given,
+               its default value is 'numIden=-1'.
+    nombre:    Full name of the student.
+    notas:     List of real numbers with the student's grades.
     """
 
     def __init__(self, nombre, numIden=-1, notas=[]):
@@ -16,29 +27,78 @@ class Alumno:
 
     def __add__(self, other):
         """
-        Devuelve un nuevo objeto 'Alumno' con una lista de notas ampliada con
-        el valor pasado como argumento. De este modo, añadir una nota a un
-        Alumno se realiza con la orden 'alumno += nota'.
+        Return a new Alumno object with its list of grades extended with the
+        value passed as an argument. In this way, adding a grade to an Alumno
+        is done with the command 'alumno += nota'.
         """
         return Alumno(self.nombre, self.numIden, self.notas + [other])
 
     def media(self):
         """
-        Devuelve la nota media del alumno.
+        Return the student's average grade.
         """
         return sum(self.notas) / len(self.notas) if self.notas else 0
 
     def __repr__(self):
         """
-        Devuelve la representación 'oficial' del alumno. A partir de copia
-        y pega de la cadena obtenida es posible crear un nuevo Alumno idéntico.
+        Return the official representation of the student. By copying and
+        pasting the resulting string, it is possible to create an identical
+        Alumno object.
         """
         return f'Alumno("{self.nombre}", {self.numIden!r}, {self.notas!r})'
 
     def __str__(self):
         """
-        Devuelve la representación 'bonita' del alumno. Visualiza en tres
-        columnas separas por tabulador el número de identificación, el nombre
-        completo y la nota media del alumno con un decimal.
+        Return the pretty representation of the student. It displays three
+        tab-separated columns: the identification number, the full name and
+        the student's average grade with one decimal place.
         """
         return f'{self.numIden}\t{self.nombre}\t{self.media():.1f}'
+
+
+def leeAlumnos(ficAlum):
+    """
+    Read a student file and return a dictionary.
+    The dictionary key is the student's name, and the value is the
+    corresponding Alumno object.
+
+    >>> alumnos = leeAlumnos('alumnos.txt')
+    >>> for alumno in alumnos:
+    ...     print(alumnos[alumno])
+    ...
+    171     Blanca Agirrebarrenetse 9.5
+    23      Carles Balcells de Lara 4.9
+    68      David Garcia Fuster     7.0
+    """
+    alumnos = {}
+
+    patron = re.compile(
+        r"^\s*(\d+)\s+(.+?)\s+((?:\d+(?:\.\d+)?\s*)+)$"
+    )
+
+    with open(ficAlum, encoding="utf-8") as fichero:
+        for linea in fichero:
+            linea = linea.strip()
+
+            if not linea:
+                continue
+
+            coincidencia = patron.fullmatch(linea)
+
+            if coincidencia:
+                num_iden = int(coincidencia.group(1))
+                nombre = coincidencia.group(2)
+                notas = [
+                    float(nota)
+                    for nota in re.findall(r"\d+(?:\.\d+)?", coincidencia.group(3))
+                ]
+
+                alumnos[nombre] = Alumno(nombre, num_iden, notas)
+
+    return alumnos
+
+
+if __name__ == "__main__":
+    import doctest
+
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE, verbose=True)
